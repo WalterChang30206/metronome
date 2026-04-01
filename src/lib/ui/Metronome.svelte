@@ -226,6 +226,7 @@
     width: 100%;
     height: 100%;
     overflow: visible;
+    touch-action: none;
   }
 
   .controls {
@@ -350,7 +351,7 @@
               onpointerdown={interactionModule.pendulumWeightPointerDown}
               onpointermove={interactionModule.pendulumWeightPointerDrag}
               onpointerup={(e) => interactionModule.pendulumWeightPointerUp(e, runAnimation)}
-              style="cursor: grab; touch-action: none;"
+              style="cursor: grab;"
             />
 
             <!-- 轉軸 (pivot) -->
