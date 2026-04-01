@@ -207,8 +207,8 @@
     box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
   }
 
-  #pendulum-rod {
-    z-index: 9999;
+  .no-pointer-events {
+    pointer-events: none;
   }
 
   .window {
@@ -292,90 +292,126 @@
   }
 </style>
 
-<main>
-  <div class="body">
-    <h1>Metronome</h1>
+  <main>
+    <div class="body">
+      <h1>Metronome</h1>
 
-    <div class="metronome-body">
-      <div class="window">
-        <!--
-          SVG 參數（供動畫邏輯引用）：
-            data-angle       目前角度（弧度），從垂直軸算起，正為右
-            data-origin-x/y  擺動支點座標
-            data-length      指針長度（SVG px）
-            data-weight-pos  配重塊位置，0.0 ~ 1.0（沿指針比例）
-        -->
-        <svg
-          id="pendulum-svg"
-          viewBox="0 0 200 400"
-          data-angle="0"
-          data-origin-x="100"
-          data-origin-y="20"
-          data-length="160"
-          data-weight-pos="0.7"
-        >
-          <!-- 指針 -->
-          <line
-            id="pendulum-rod"
-            x1="100"
-            y1={METRONOME_UI.rodPositionMin}
-            x2={METRONOME_UI.pivotX}
-            y2={METRONOME_UI.pivotY}
-            stroke="#c8b89a"
-            stroke-width="8"
-            stroke-linecap="round"
-            transform={`rotate(${metronome.radToDegree(state.currentAngle)}, ${METRONOME_UI.pivotX}, ${METRONOME_UI.pivotY})`}
-          />
+      <div class="metronome-body">
+        <div class="window">
+          <!--
+            SVG 參數（供動畫邏輯引用）：
+              data-angle       目前角度（弧度），從垂直軸算起，正為右
+              data-origin-x/y  擺動支點座標
+              data-length      指針長度（SVG px）
+              data-weight-pos  配重塊位置，0.0 ~ 1.0（沿指針比例）
+          -->
+          <svg
+            id="pendulum-svg"
+            viewBox="0 0 200 400"
+            data-angle="0"
+            data-origin-x="100"
+            data-origin-y="20"
+            data-length="160"
+            data-weight-pos="0.7"
+          >
+            <!-- 指針 -->
+            <line
+              id="pendulum-rod"
+              x1="100"
+              y1={METRONOME_UI.rodPositionMin}
+              x2={METRONOME_UI.pivotX}
+              y2={METRONOME_UI.pivotY}
+              stroke="#c8b89a"
+              stroke-width="8"
+              stroke-linecap="round"
+              transform={`rotate(${metronome.radToDegree(state.currentAngle)}, ${METRONOME_UI.pivotX}, ${METRONOME_UI.pivotY})`}
+            />
 
-          <!-- 配重塊（可沿指針滑動） -->
-          <rect
-            id="pendulum-weight"
-            x="80"
-            y={pendulumWeightPosition}
-            width="40"
-            height="16"
-            rx="2"
-            fill="#c8b89a"
-            transform={`rotate(${metronome.radToDegree(state.currentAngle)}, ${METRONOME_UI.pivotX}, ${METRONOME_UI.pivotY})`}
-          />
+            <!-- 配重塊（可沿指針滑動） -->
+            <rect
+              id="pendulum-weight"
+              x="80"
+              y={pendulumWeightPosition}
+              width="40"
+              height="16"
+              rx="2"
+              fill="#c8b89a"
+              transform={`rotate(${metronome.radToDegree(state.currentAngle)}, ${METRONOME_UI.pivotX}, ${METRONOME_UI.pivotY})`}
+            />
 
-          <!-- 透明的大判定區，負責接收事件 -->
-          <rect
-            x="40"
-            y={pendulumWeightPosition - 40}
-            width="120" height="100"
-            rx="4"
-            fill="transparent"
-            transform={`rotate(${metronome.radToDegree(state.currentAngle)}, ${METRONOME_UI.pivotX}, ${METRONOME_UI.pivotY})`}
-            onmousedown={interactionModule.pendulumWeightMouseDown}
-            onmousemove={interactionModule.pendulumWeightMouseDrag}
-            onmouseup={(e) => interactionModule.pendulumWeightMouseUp(e, runAnimation)}
-            onmouseout={(e) => interactionModule.pendulumWeightMouseOut(e, runAnimation)}
-            style="cursor: grab;"
-          />
+            <!-- 透明的大判定區，負責接收事件 -->
+            <rect
+              x="40"
+              y={pendulumWeightPosition - 40}
+              width="120" height="100"
+              rx="4"
+              fill="transparent"
+              transform={`rotate(${metronome.radToDegree(state.currentAngle)}, ${METRONOME_UI.pivotX}, ${METRONOME_UI.pivotY})`}
+              onpointerdown={interactionModule.pendulumWeightPointerDown}
+              onpointermove={interactionModule.pendulumWeightPointerDrag}
+              onpointerup={(e) => interactionModule.pendulumWeightPointerUp(e, runAnimation)}
+              style="cursor: grab; touch-action: none;"
+            />
 
-          <!-- 轉軸 (pivot) -->
-          <circle
-            id="pendulum-bob"
-            cx={METRONOME_UI.pivotX}
-            cy={METRONOME_UI.pivotY}
-            r="9"
-            fill="#c8b89a"
-          />
-        </svg>
+            <!-- 轉軸 (pivot) -->
+            <circle
+              id="pendulum-bob"
+              cx={METRONOME_UI.pivotX}
+              cy={METRONOME_UI.pivotY}
+              r="9"
+              fill="#c8b89a"
+            />
+
+            <!-- 刻度左側(BPM) -->
+            <line class="no-pointer-events" x1="50" y1="86" x2="70" y2="86" stroke="#c8b89a" stroke-width="1"/>
+            <text class="no-pointer-events" x="40" y="90" text-anchor="end" font-size="12" fill="#c8b89a">40</text>
+
+            <line class="no-pointer-events" x1="50" y1="155" x2="70" y2="155" stroke="#c8b89a" stroke-width="1"/>
+            <text class="no-pointer-events" x="40" y="160" text-anchor="end" font-size="12" fill="#c8b89a">80</text>
+
+            <line class="no-pointer-events" x1="50" y1="224" x2="70" y2="224" stroke="#c8b89a" stroke-width="1"/>
+            <text class="no-pointer-events" x="40" y="229" text-anchor="end" font-size="12" fill="#c8b89a">120</text>
+
+            <line class="no-pointer-events" x1="50" y1="292" x2="70" y2="292" stroke="#c8b89a" stroke-width="1"/>
+            <text class="no-pointer-events" x="40" y="297" text-anchor="end" font-size="12" fill="#c8b89a">160</text>
+
+            <line class="no-pointer-events" x1="50" y1="358" x2="70" y2="358" stroke="#c8b89a" stroke-width="1"/>
+            <text class="no-pointer-events" x="40" y="363" text-anchor="end" font-size="12" fill="#c8b89a">200</text>
+
+            <!-- 刻度左側(速度術語) -->
+            <line class="no-pointer-events" x1="130" y1="85" x2="150" y2="85" stroke="#c8b89a" stroke-width="1"/>
+            <text class="no-pointer-events" x="160" y="90" text-anchor="start" font-size="12" fill="#c8b89a">Grave</text>
+
+            <line class="no-pointer-events" x1="130" y1="155" x2="150" y2="155" stroke="#c8b89a" stroke-width="1"/>
+            <text class="no-pointer-events" x="160" y="160" text-anchor="start" font-size="12" fill="#c8b89a">Andante</text>
+
+            <line class="no-pointer-events" x1="130" y1="224" x2="150" y2="224" stroke="#c8b89a" stroke-width="1"/>
+            <text class="no-pointer-events" x="160" y="229" text-anchor="start" font-size="12" fill="#c8b89a">Moderato</text>
+
+            <line class="no-pointer-events" x1="130" y1="292" x2="150" y2="292" stroke="#c8b89a" stroke-width="1"/>
+            <text class="no-pointer-events" x="160" y="297" text-anchor="start" font-size="12" fill="#c8b89a">Allegro</text>
+
+            <line class="no-pointer-events" x1="130" y1="358" x2="150" y2="358" stroke="#c8b89a" stroke-width="1"/>
+            <text class="no-pointer-events" x="160" y="363" text-anchor="start" font-size="12" fill="#c8b89a">Presto</text>
+
+            <!-- 刻度中線 -->
+            <line class="no-pointer-events" x1="70" y1="86" x2="70" y2="375" stroke="#c8b89a" stroke-width="1"/>
+            <line class="scale-mark" x1="130" y1="86" x2="130" y2="375" stroke="#c8b89a" stroke-width="1"/>
+
+          </svg>
+        </div>
       </div>
-    </div>
-    <div class="base"></div>
+      <div class="base"></div>
 
-    <div class="controls">
-      <div style="text-align:center">
-        <div class="bpm-display" id="bpm-display">{bpm}</div>
-        <div class="bpm-label">BPM</div>
+      <div class="controls">
+        <div style="text-align:center">
+          <div class="bpm-display" id="bpm-display">{bpm}</div>
+          <div class="bpm-label">BPM</div>
+        </div>
+        <!-- <button onclick={calculateBpmFromTestingArray}>calculate bpm</button> -->
       </div>
-      <!-- <button onclick={calculateBpmFromTestingArray}>calculate bpm</button> -->
-    </div>
 
-    
-  </div>
-</main>
+      
+    </div>
+  </main>
 
