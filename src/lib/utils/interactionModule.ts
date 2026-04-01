@@ -18,7 +18,13 @@ export class InteractionModule {
     // 因為 y 數字越大的在越下面
 
 
-    public pendulumWeightPointerDown(e: PointerEvent) {
+    public pendulumWeightPointerDown = (e: PointerEvent, audioContext: AudioContext) => {
+    // public pendulumWeightPointerDown(e: PointerEvent) {
+        console.log(e, audioContext)
+        // ios 系統一定要使用者操作後才可以放出聲音
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
 
         // 避免離開判定區域後丟失指定物件
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -33,7 +39,7 @@ export class InteractionModule {
     }
 
     // 取樣當下，與一開始 mouse down 鎖定的點形成一個 vector，只取與指針平行的分量
-    public pendulumWeightPointerDrag(e: PointerEvent) {
+    public pendulumWeightPointerDrag = (e: PointerEvent) => {
 
         if (state.mouseMoving === false) {
             return
@@ -64,7 +70,7 @@ export class InteractionModule {
         }
     }
 
-    public pendulumWeightPointerUp(e: PointerEvent, callback: () => void) {
+    public pendulumWeightPointerUp = (e: PointerEvent, callback: () => void) => {
         state.mouseMoving = false
 
         // 只有在合適區間才開始擺動

@@ -184,6 +184,7 @@
     min-width: 100vw;
     font-family: 'DM Mono', monospace;
     color: #c8b89a;
+    touch-action: none;
   }
 
   h1 {
@@ -226,7 +227,6 @@
     width: 100%;
     height: 100%;
     overflow: visible;
-    touch-action: none;
   }
 
   .controls {
@@ -348,7 +348,7 @@
               rx="4"
               fill="transparent"
               transform={`rotate(${metronome.radToDegree(state.currentAngle)}, ${METRONOME_UI.pivotX}, ${METRONOME_UI.pivotY})`}
-              onpointerdown={interactionModule.pendulumWeightPointerDown}
+              onpointerdown={(e) => interactionModule.pendulumWeightPointerDown(e, audioContext)}
               onpointermove={interactionModule.pendulumWeightPointerDrag}
               onpointerup={(e) => interactionModule.pendulumWeightPointerUp(e, runAnimation)}
               style="cursor: grab;"
