@@ -46,16 +46,29 @@
           metronome.degreeToRad(10),
           metronome.degreeToRad(55),
         )
-        state.direction         = state.currentAngle > 0 ? -1 : 1
+        if (state.initialDirection != 0) {
+          // 根據初始切速度方向決定系統方向
+          state.direction = state.initialDirection
+        } else {
+          // 如果初始甩出的操作沒有完成就走預設邏輯
+          state.direction = state.currentAngle > 0 ? -1 : 1
+        }
+        
         requestAnimationFrame(tick)
         return
     }
 
     // 達到最大角度後：1. 轉向, 2. 發出聲音
     const originalDirection = state.direction
-    if (state.currentAngle > state.transientAngleMax) {
+
+    // 如果釋放角度小於 bpm 可擺動的最大角度，就不需要額外處理；釋放角度大於 bpm 可擺動最大角度才要慢慢 decay 至合理範圍
+    const actionAngleMax = (state.lastReleaseAngle <= angleMaxFromRadius)
+      ? angleMaxFromRadius
+      : state.transientAngleMax
+
+    if (state.currentAngle > actionAngleMax) {
       state.direction = -1
-    } else if (state.currentAngle < (-1 * state.transientAngleMax)) {
+    } else if (state.currentAngle < (-1 * actionAngleMax)) {
       state.direction = 1
     }
     if (originalDirection != state.direction) {
@@ -70,14 +83,17 @@
 
     // using euler method
     const deltaTime     = (timestamp - state.lastTime) / 1000
-    const slopeFunction = (angle) => state.direction * metronome.angularVelocity(angle, state.transientAngleMax + 1e-6)
+    const elapsedTime   = (timestamp - state.lastReleaseTime) / 1000
+    const initialAngularVelocityDamping = liteMath.clamp((2 - elapsedTime) / 2, 0, 1)// * (state.currentAngle / actionAngleMax)
+
+    const slopeFunction = (angle) => state.direction * ( state.initialAngularVelocity * initialAngularVelocityDamping + metronome.angularVelocity(angle, actionAngleMax + 1e-6))
     const nextCurrentAngle = liteMath.eulerMethod(
       state.currentAngle,
       deltaTime,
       slopeFunction,
     )
 
-    const isReleasedAtSmallAngle = state.lastReleaseAngle < metronome.degreeToRad(3)
+    const isReleasedAtSmallAngle = state.lastReleaseAngle < angleMaxFromRadius
     const hasCrossedMiddleLine   = (nextCurrentAngle * state.currentAngle) < 0
     
     if (isReleasedAtSmallAngle) {
@@ -85,12 +101,8 @@
       state.transientAngleMax = angleMaxFromRadius
     } else if (hasCrossedMiddleLine) {
       // 如果跨過中心線，就要 update 下一個 transientAngleMax
-      const elapsedTime = (timestamp - state.lastReleaseTime) / 1000
-      // 釋放角度小於收斂最大擺角 => 線性衰減
       // 釋放角度大於收斂最大擺角 => 指數衰減
-      const decayCoefficient  = (state.transientAngleMax < angleMaxFromRadius)
-        ? liteMath.clamp((3 - elapsedTime) / 3, 0, 1)
-        : liteMath.clamp(Math.exp(-1 * elapsedTime), 0, 1)
+      const decayCoefficient = liteMath.clamp(Math.exp(-1 * elapsedTime), 0, 1)
       state.transientAngleMax = liteMath.clamp(
         angleMaxFromRadius + (state.lastReleaseAngle - angleMaxFromRadius) * decayCoefficient,
         metronome.degreeToRad(10),
@@ -210,6 +222,8 @@
 
   .no-pointer-events {
     pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none; /* iOS 需要這個 */
   }
 
   .window {
