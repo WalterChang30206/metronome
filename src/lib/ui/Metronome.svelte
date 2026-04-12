@@ -21,6 +21,10 @@
   // @debug
   // let testingArray = [];
 
+  window.addEventListener('pointermove',   (e) => interactionModule.pendulumWeightPointerDrag(e))
+  window.addEventListener('pointerup',     (e) => interactionModule.handlePointerEnd(e, runAnimation))
+  window.addEventListener('pointercancel', (e) => interactionModule.handlePointerEnd(e, runAnimation))  // 共用同一個 cleanup handler
+
   function runAnimation() {
     state.animationRunning = true
     requestAnimationFrame(tick)
@@ -362,11 +366,13 @@
               rx="4"
               fill="transparent"
               transform={`rotate(${metronome.radToDegree(state.currentAngle)}, ${METRONOME_UI.pivotX}, ${METRONOME_UI.pivotY})`}
-              onpointerdown={(e) => interactionModule.pendulumWeightPointerDown(e, audioContext)}
-              onpointermove={interactionModule.pendulumWeightPointerDrag}
-              onpointerup={(e) => interactionModule.pendulumWeightPointerUp(e, runAnimation)}
               style="cursor: grab;"
+              onpointerdown={(e) => interactionModule.pendulumWeightPointerDown(e, audioContext, runAnimation)}
             />
+
+            <!-- onpointermove={interactionModule.pendulumWeightPointerDrag}
+            onpointerup={(e) => interactionModule.pendulumWeightPointerUp(e, runAnimation)}
+            onpointercancel={(e) => interactionModule.pendulumWeightPointerCancel(e)} -->
 
             <!-- 轉軸 (pivot) -->
             <circle
