@@ -79,7 +79,7 @@ export class InteractionModule {
         const firingTangentialAngle = tantentialPointerVectorSquared === 0
             ? 0
             : Math.acos(Math.abs(tangentialProjection) / Math.sqrt(tantentialPointerVectorSquared)) * 180 / Math.PI
-
+        console.log(firingTangentialAngle)
         if (firingTangentialAngle > 60) {
             // 走徑向改變 BPM
             state.normRadius = liteMath.clamp(
@@ -133,6 +133,6 @@ export class InteractionModule {
     
     private tangentialUnit = () => liteMath.vec2(
         Math.cos(state.currentAngle),
-        Math.abs(Math.sin(state.currentAngle))
+        Math.sin(state.currentAngle)
     )
 }
